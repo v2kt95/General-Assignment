@@ -1,0 +1,1 @@
+WebAPI has deployed in following address: http://simplewebapi-1.apphb.com

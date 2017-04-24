@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<style>
+    table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 5px;
+        text-align: left;
+    }
+</style>
+<head>
+    <title>All Users</title>
+</head>
+<body>
+    <div>
+        <h2>All Users</h2>
+        <ul id="widgets" />
+    </div>
+    <div>
+        <h2>Search by ID</h2>
+        <input type="text" id="wigetId" size="5" />
+        <input type="button" value="Search" onclick="findById();" /><br/>
+        <p id="wrap">
+            ID: <span id="UserID" style="margin:0px"></span><br />
+            Name: <span id="UserName" style="margin:0px"></span><br />
+            <table id="friendtbl">
+                <tr>
+                    <th>Friend</th>
+                    <th>Friend Of Friend</th>
+                </tr>
+            </table>
+        </p>
+    </div>
+
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+    <script>
+        var uri = 'api/User';
+
+        $(document).ready(function () {
+            // Send an AJAX request
+            $.getJSON(uri)
+                .done(function (data) {
+                    // On success, 'data' contains a list of products.
+                    $.each(data, function (key, item) {
+                        // Add a list item for the product.
+                        $('<li>', { text: item.ID + ":" + item.Name }).appendTo($('#widgets'));
+                    });
+                });
+        });
+
+        function formatItem(item) {
+            return item.ID + "<br/>" + item.Name + "<br/>" + item.Friends;
+        }
+
+        function findById() {
+            $("td").remove();
+            $("tr:empty").remove();
+            var id = $('#wigetId').val();
+            $.getJSON(uri + '/' + id)
+                .done(function (data) {
+                    $('#UserID').text(data.ID);
+                    $('#UserName').text(data.Name);
+                    var friends = "";
+                    for (i = 0; i < data.Friends.length ; i++) {
+                        $.getJSON(uri + '/' + data.Friends[i])
+                            .done(function (data2) {
+                                $("#friendtbl").append("<tr><td>" + data2.Name + "</td><td id=user" + data2.ID + "></td></tr>");
+                                for (j = 0; j < data2.Friends.length ; j++) {
+                                    $.getJSON(uri + '/' + data2.Friends[j])
+                                        .done(function (data3) {
+                                            if(data3.ID != data.ID){
+                                                $("#user" + data2.ID).append(data3.Name + " ");
+                                            }
+                                        })
+                                }
+                            })
+                    }
+                    //$('#Friends').text(friends);
+                    //console.log(friends);
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    $('#widget').text('Error: ' + err);
+                });
+        }
+    </script>
+</body>
+</html>
